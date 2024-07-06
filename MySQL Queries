@@ -1,0 +1,80 @@
+### 1. Total Revenue by Product Type:
+
+SELECT Product_type, ROUND(SUM(Revenue_generated), 2) AS Total_Revenue
+FROM supplychain_data
+GROUP BY Product_type;
+
+
+Improvement: Simplified aliasing and formatting for clarity.
+
+
+### 2. Shipping Costs by Carrier:
+
+SELECT Shipping_carrier, ROUND(AVG(Shipping_costs), 2) AS Average_Shipping_Cost
+FROM supplychain_data
+GROUP BY Shipping_carrier;
+
+Improvement: Renamed Shipping_carriers to Shipping_carrier for consistency and clearer aliasing.
+
+
+### 3. Lead Times by Supplier:
+
+SELECT Supplier_name, AVG(Lead_time) AS Avg_Lead_Time
+FROM supplychain_data
+GROUP BY Supplier_name;
+
+Improvement: Clarified aliasing and removed redundant SELECT * statement.
+
+
+### 4. Total Products Sold by Location:
+
+SELECT Location, SUM(Number_of_products_sold) AS Total_Products_Sold
+FROM supplychain_data
+GROUP BY Location
+ORDER BY Total_Products_Sold DESC;
+
+Improvement: Added ORDER BY clause to sort locations by total products sold in descending order.
+
+
+### 5. Defect Rates by Inspection Results:
+
+SELECT Inspection_results, ROUND(AVG(Defect_rates), 2) AS Defect_Rate
+FROM supplychain_data
+GROUP BY Inspection_results;
+
+Improvement: Clarified aliasing and formatting for better readability.
+
+
+### 6. Ranking Products by Profitability:
+
+SELECT SKU, Product_type, 
+       (Revenue_generated - Manufacturing_costs - Shipping_costs) AS Profitability,
+       DENSE_RANK() OVER(PARTITION BY Product_type ORDER BY Revenue_generated - Manufacturing_costs - Shipping_costs DESC) AS Profitability_Rank
+FROM supplychain_data;
+
+Improvement: Corrected calculation of profitability and refined DENSE_RANK() window function for ranking profitability within each product type.
+
+
+### 7. Supplier Performance Analysis:
+
+SELECT Supplier_name, AVG(Lead_time) AS Avg_Lead_Time
+FROM supplychain_data
+GROUP BY Supplier_name
+HAVING AVG(Lead_time) > (SELECT AVG(Lead_time) FROM supplychain_data);
+
+Improvement: Added HAVING clause to filter suppliers with lead times higher than the overall average.
+
+
+### 8. Top 5 Shipping Carriers by Cost Efficiency:
+
+WITH CarrierCosts AS (
+    SELECT Product_type, Shipping_carrier, AVG(Shipping_costs) AS Avg_Shipping_Cost,
+           DENSE_RANK() OVER(PARTITION BY Product_type ORDER BY AVG(Shipping_costs)) AS Cost_Rank
+    FROM supplychain_data
+    GROUP BY Product_type, Shipping_carrier
+)
+SELECT Product_type, Shipping_carrier, Avg_Shipping_Cost
+FROM CarrierCosts
+WHERE Cost_Rank <= 5;
+
+Improvement: Used a Common Table Expression (CTE) for readability and efficiency in determining the top 5 shipping carriers by average shipping costs per product shipped.
